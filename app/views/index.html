@@ -1,0 +1,142 @@
+<!-- base.htmlを継承 -->
+{% extends 'base.html' %}
+
+<!-- 以下、index.htmlオリジナルのhead -->
+{% block head %}
+<style>
+    /* チャート */
+    #line_top_x{
+        width: 90%;
+        height: 540px;
+        border: 1px solid #ccc;
+        margin: 65px auto;
+        padding: 10px;
+    }
+    /* ボタン */
+    .button{
+        position:relative;
+        left:6%;
+        top:60px;
+    }
+    /* 上記2つ */
+    .wrap {
+     overflow: hidden;
+    }
+</style>
+
+<!-- GoogleChartをロード -->
+<script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+<!-- GoogleホスティングのjQueryをロード -->
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+<script type="text/javascript">
+    <!-- GoogleChartのパッケージをロード -->
+    google.charts.load('current', {'packages':['line', 'controls']});
+
+    // 変数の初期設定
+    var config = {
+      api:{
+          enable: true,
+          interval: 1000 * 60 * 60
+      },
+      value:{duration: '1Y'},
+    };
+
+    // データテーブルを受け取り、チャートを描画する
+    function drawChart(dataTable) {
+        var chart = new google.charts.Line(document.getElementById('line_top_x'));
+        var options = {
+            fontSize: 12,
+            colors: [
+                '#1f77b4', '#aec7e8', '#ff7f0e', '#ffbb78', '#2ca02c', '#98df8a', '#d62728', '#ff9896', '#9467bd',
+                '#c5b0d5', '#8c564b', '#c49c94', '#e377c2', '#f7b6d2', '#7f7f7f', '#c7c7c7', '#bcbd22', '#dbdb8d',
+                '#17becf', '#9edae5'
+            ],
+            vAxis: {format: 'percent'}
+        };
+        chart.draw(dataTable, google.charts.Line.convertOptions(options));
+    }
+
+    // チャートのレスポンシブ対応
+    $(window).resize(function(){
+        drawChart(dataTable);
+    });
+
+    // Ajaxでバックエンドにリクエストを送る
+    function send() {
+        if (config.api.enable == false){
+            return
+        }
+        var params = {duration: config.value.duration}
+
+        // APIにリクエストを投げ、レスポンスをデータテーブルに格納
+        $.get("/api/value/", params).done(function (data) {
+            var dataTable = new google.visualization.DataTable();
+            // データテーブルのカラムを定義
+            dataTable.addColumn('string', '');
+            dataTable.addColumn('number', '食品');
+            dataTable.addColumn('number', 'エネルギー資源');
+            dataTable.addColumn('number', '建設・資材');
+            dataTable.addColumn('number', '素材・化学');
+            dataTable.addColumn('number', '医薬品');
+            dataTable.addColumn('number', '自動車・輸送機器');
+            dataTable.addColumn('number', '鉄鋼・非鉄');
+            dataTable.addColumn('number', '機械');
+            dataTable.addColumn('number', '電機・精密');
+            dataTable.addColumn('number', '情報通信・サービスその他');
+            dataTable.addColumn('number', '電力・ガス');
+            dataTable.addColumn('number', '運輸・物流');
+            dataTable.addColumn('number', '商社・卸売');
+            dataTable.addColumn('number', '小売');
+            dataTable.addColumn('number', '銀行');
+            dataTable.addColumn('number', '金融(除く銀行)');
+            dataTable.addColumn('number', '不動産');
+
+            var googleChartData = [];
+            var values = data["values"];
+
+            // forループで取得したデータを展開、データテーブルに格納し、drawChart()に送る
+            for(var i=0; i < values.length; i++){
+                var value = values[i];
+                var date = new Date(value.time).toLocaleDateString();
+                var datas = [date, value.FOOD, value.ERGY, value.CNMT, value.RWCH, value.PHRM, value.TPEQ, value.STML,
+                    value.MACH, value.ELPR, value.ITSV, value.ELEC, value.TPLG, value.WSAL, value.RETL, value.BNK,
+                    value.FNCL, value.REAL];
+                googleChartData.push(datas)
+            }
+
+            dataTable.addRows(googleChartData);
+            drawChart(dataTable);
+        })
+    }
+
+    // ボタンによる時間軸の変更
+    function changeDuration(d) {
+        config.value.duration = d;
+        send();
+    }
+
+    // send()の頻度設定
+    setInterval(send, 1000 * 60 * 60)
+
+    // ページ読み込み時の挙動
+    window.onload = function () {
+        send()
+    }
+</script>
+{% endblock %}
+
+<!-- 以下、index.htmlオリジナルのbody -->
+{% block body %}
+<div class="wrap">
+    <!-- ボタンの設置 -->
+    <div class="button">
+        <button onclick="changeDuration('1M');" class="btn btn-outline-dark btn-sm" >1ヶ月</button>
+        <button onclick="changeDuration('3M');" class="btn btn-outline-dark btn-sm">3ヶ月</button>
+        <button onclick="changeDuration('1Y');" class="btn btn-outline-dark btn-sm">1年</button>
+        <button onclick="changeDuration('5Y');" class="btn btn-outline-dark btn-sm">5年</button>
+        <button onclick="changeDuration('Max');" class="btn btn-outline-dark btn-sm">最大</button>
+    </div>
+    <!-- チャートの設置 -->
+    <div id="line_top_x"></div>
+</div>
+{% endblock %}
