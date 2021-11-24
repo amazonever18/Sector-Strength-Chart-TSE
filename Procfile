@@ -1,2 +1,2 @@
 web: python main.py
-web: gunicorn app.controllers.webserver:app --log-file=-
+web: gunicorn main:app --log-file=-
