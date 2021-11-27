@@ -1,3 +1,4 @@
+import os
 import sys
 import datetime
 
@@ -80,7 +81,7 @@ def generate_values(priod_type, priod, frequency_type, frequency, table):
     df_base = df_base.fillna(method='ffill')
 
     # データフレームをDBに変換
-    engine = create_engine(f'sqlite:///{settings.db_name}?check_same_thread=False')
+    engine = create_engine(os.environ.get('DATABASE_URL') or f'sqlite:///{settings.db_name}?check_same_thread=False')
     df_base.to_sql(table, con=engine, schema=None, if_exists='replace', index=True,
                    index_label=None, chunksize=None, dtype=None, method=None)
 

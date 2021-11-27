@@ -1,6 +1,8 @@
-from contextlib import contextmanager
+import os
 import logging
 import threading
+from contextlib import contextmanager
+
 
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
@@ -10,7 +12,7 @@ from sqlalchemy.orm import scoped_session
 import settings
 
 # セッションの作成
-engine = create_engine(f'sqlite:///{settings.db_name}?check_same_thread=False')
+engine = create_engine(os.environ.get('DATABASE_URL') or f'sqlite:///{settings.db_name}?check_same_thread=False')
 Base = declarative_base()
 Session = scoped_session(sessionmaker(bind=engine))
 logger = logging.getLogger(__name__)
