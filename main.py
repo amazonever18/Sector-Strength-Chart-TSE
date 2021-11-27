@@ -21,8 +21,8 @@ if __name__ == "__main__":
     # serverThread.join()
 
     # 毎時00分時点でDBのデータを更新
-    schedule.every(2).minutes.do(yahoo_finance.generate_all_values)
-    # schedule.every().hour.at(":00").do(yahoo_finance.generate_all_values)
+    # schedule.every(2).minutes.do(yahoo_finance.generate_all_values)
+    schedule.every().hour.at(":00").do(yahoo_finance.generate_all_values)
     while True:
         schedule.run_pending()
         sleep(1)
