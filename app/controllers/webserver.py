@@ -3,7 +3,6 @@ from flask import jsonify
 from flask import render_template
 from flask import request
 
-import settings
 from app.models.dfvalue import DataFrameValue
 
 # Flaskの定義
